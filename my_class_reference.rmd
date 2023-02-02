@@ -1,6 +1,6 @@
 ---
 title: "Class Reference"
-author: "Student name"
+author: "Natalie Davis"
 output:
   html_document:
     theme: cerulean
@@ -14,6 +14,13 @@ output:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+```{r}
+print("Hello!")
+```
+
+
+
 
 ## Introduction
 
