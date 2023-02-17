@@ -1,0 +1,97 @@
+---
+title: "lab_02"
+author: "derek willis"
+date: "2023-01-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries and establish settings
+
+```{r}
+# Turn off scientific notation
+options(scipen=999)
+
+# Load the tidyverse. If you have not installed the tidyverse already, remove the # from the next line and run it first.  
+# install.packages('tidyverse')
+library(tidyverse)
+library(lubridate)
+```
+
+## Load Data
+
+Let's keep working with the UMD courses and Maryland campaign expense data we used in the pre_lab.
+
+```{r}
+umd_courses <- read_rds("data/umd_courses.rds")
+maryland_expenses <- read_csv("data/maryland_expenses.csv")
+```
+
+## Answer questions
+
+**Q1** Create a new column that divides the expense amounts into the following categories - \$0-\$500, \$500-\$5000, \$5001-\$50000, \$50001\_\$100000, \$100001-\$500000 - giving each an appropriate text value, and count how many expenses are in each group. How would you describe the distribution of expenses in a sentence? Would you change the categories?
+
+**A1: The distribution of expenses is very lopsided with about 95% of the expenses being $5,000 or less. I would make the increments maybe by 100 in the beginning instead of going straight to 500 (like add in 100-200, 200-300,etc) and then maybe by thousands instead of going straight to 5000 **
+
+```{r}
+maryland_expenses_with_chunks <- maryland_expenses %>% 
+  mutate(
+    expense_chunk=case_when(
+      amount <= 0 ~ "negative", 
+      amount <= 500  ~ "0-500", 
+      amount <= 5000  ~ "500-5000",
+      amount <= 50000  ~ "5001-50000",
+      amount <= 100000 ~ "50001-100000",
+      amount <= 500000 ~ "100001-500000"
+    )
+)
+```
+``` {r}
+maryland_expenses_with_chunks %>%
+  group_by(expense_chunk) %>%
+  summarise(
+    count_expense_chunk = n() 
+  )
+``` 
+**Q2.** How many departments have offered the courses with "Climate" in the title and at least one seat? Which department has offered the most? 
+**A2: Atmospheric and Oceanic Science offers the most courses with a total of 66 being offered by them** 
+
+```{r}
+umd_courses %>% 
+  filter(str_detect(title, "Climate")) %>%
+  group_by(department) %>%
+  summarise( 
+    count_department = n() ) %>%
+  arrange(desc(count_department))
+```
+
+**Q3.** Of the departments listed in A2, which one is the most interesting to you, and why?
+**A3: Economics having 4 classes on climate is pretty interesting because I'd like to learn more about the connection between the climate and the economy and how the climate affects businesses across the world** 
+
+**Q4.** Using the Maryland campaign expenses data, change the datatype of the expenditure_date column so that it is a date and not a chr. Then create a new column for the month based on expenditure_date. Then write code that shows total amount spent each month by Wes Moore's committee (you'll need to search the data to find the exact name). Write a sentence describing the pattern of spending over time.
+**A4.October as well as May and June are the highest expense months which are months that occur right before an election (As they are held in July and November)**
+
+```{r}
+ maryland_expenses_with_date <- maryland_expenses_with_state %>% 
+  mutate(expenditure_date=mdy(expenditure_date))
+```
+```{r}
+maryland_expenses_with_date %>%
+  filter(committee_name == "Moore  Wes For Maryland") %>% 
+  mutate(month = floor_date(expenditure_date, "month")) %>%
+  group_by(month) %>%
+  summarise(total_amount = sum(amount)) %>%
+  arrange(desc(total_amount)) 
+```
+
+**Q5.** Choose your own adventure: using either the UMD courses or campaign expenses data, ask and answer a question that is different than the previous ones. You can use one of the ones you provided in the pre_lab.
+**A5: Which date had the highest amount of expenditures? The answer is January 11th 2022 with just short of $3 million on that day (2,839,313.10) ** 
+```{r}
+maryland_expenses_with_date %>%
+  group_by(expenditure_date) %>%
+  summarise(total_amount = sum(amount)) %>%
+  arrange(desc(total_amount))
+```
