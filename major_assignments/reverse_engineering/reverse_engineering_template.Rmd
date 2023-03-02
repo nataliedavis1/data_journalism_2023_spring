@@ -25,7 +25,10 @@ In this notebook, we are reverse engineering the story, [STORY NAME](STORY URL)
 Loading required libraries for this analysis.
 
 ```{r echo=FALSE, message=FALSE}
-
+options(scipen=999)
+library(tidyverse)
+library(lubridate)
+library(janitor)
 ```
 
 ## Load and Cleaning Data
@@ -34,6 +37,7 @@ In this section, describe the source of the data, write a basic data dictionary 
 
 ```{r}
 # Load required data
+sports_politics <- read_csv("data/sports-political-donations.csv")
 
 # Path to data should be loaded from folder "data" i.e. read_csv("data/name_of_data.csv")
 
@@ -47,25 +51,40 @@ In this notebook, we are reverse engineering five sentences from the story.
 
 ### Sentence 1
 
-* **Sentence text**: [Paste in sentence to engineer here]
+* **Sentence text**: But while that overall summary is interesting, a more pronounced signal begins to emerge when we look more closely at this group’s larger political donations. There are 40 owners who have donated at least $100,000 to Republican causes over the six-year period, compared to 23 owners topping $100,000 to Democrats, helping lead to these splits:” 
 * **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
 
 ```{r}
 # Put code to reverse engineer sentence here
-
+sports_politics_filtered <- sports_politics %>%
+  
 # Display results of code below this codeblock
 
 ```
 
 ### Sentence 2
 
-* **Sentence text**: [Paste in sentence to engineer here]
+* **Sentence text**: 
 * **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
 
 ```{r}
 # Put code to reverse engineer sentence here
+sports_politics_filtered <- sports_politics %>%
+  
+print(sapply(sports_politics_filtered, class)) 
 
+#Convert column1 column type to numeric
+sports_politics_filtered$Amount = as.numeric(as.character(sports_politics_filtered$Amount)) 
+
+#Return the datatype of each column
+print(sapply(sports_politics_filtered, class)) 
+
+#Return the datatype of each column by converting column to numeric with transform()
+print(sapply(transform(sports_politics_filtered,Amount = as.numeric(Amount)), class))
+  
 # Display results of code below this codeblock
+
+glimpse (sports_politics_filtered)
 
 ```
 
