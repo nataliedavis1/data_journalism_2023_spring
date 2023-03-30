@@ -39,6 +39,9 @@ In this section, describe the source of the data, write a basic data dictionary 
 # Load required data
 sports_politics <- read_csv("data/sports-political-donations.csv") %>%
 clean_names()
+sports_politics$amount <- (gsub(",", "", sports_politics$amount))
+sports_politics$amount <- gsub("\\$", "", sports_politics$amount)
+sports_politics$amount <- as.numeric(sports_politics$amount)
 
 # Path to data should be loaded from folder "data" i.e. read_csv("data/name_of_data.csv")
 
@@ -58,10 +61,14 @@ In this notebook, we are reverse engineering five sentences from the story.
 
 ```{r}
 # Put code to reverse engineer sentence here
-sports_politics %>%
-  group_by(party,owner) %>%
-summarise (count_party=n())%>%
- pivot_wider(names_from=party, values_from=count_party)
+owner_totals <- sports_politics %>%
+  group_by(owner, party, league) %>%
+summarise(total_contribs = sum(amount))%>%
+ pivot_wider(names_from=party, values_from=total_contribs)%>%
+clean_names()
+
+# calculate a grand total and percents for D & R
+# then filter for > .50 by party
 
 # Display results of code below this codeblock
 ```
@@ -103,7 +110,7 @@ sports_politics %>%
 
 ### Sentence 4
 
-* **Sentence text**: [Paste in sentence to engineer here]
+* **Sentence text**: “And when we isolate just the big-ticket donations topping $100,000 from this group, a familiar picture emerges. More than 63 percent of the $47 million in the database of nearly 3,000 contributions comes from just 108 donations split among these 40 owners — and 79 percent of that money went to Republican causes.” 
 * **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
 
 ```{r}
@@ -115,7 +122,7 @@ sports_politics %>%
 
 ### Sentence 5
 
-* **Sentence text**: [Paste in sentence to engineer here]
+* **Sentence text**: “American professional sports owners have contributed nearly $47 million in federal elections since 2015, according to research by ESPN in partnership with FiveThirtyEight, including $10 million to Republican causes and $1.9 million to Democratic causes so far in the 2020 election cycle.”
 * **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
 
 ```{r}
