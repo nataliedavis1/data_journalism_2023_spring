@@ -57,15 +57,27 @@ In this notebook, we are reverse engineering five sentences from the story.
 
 * **Sentence text**:“Of the 160 owners and commissioners in ESPN’s database, 74 contributed a majority of their publicly searchable funds to Republican campaigns, with 48 donating a majority to Democrats and the rest sending most of their money to causes that aren’t fully aligned with either party.”
 
-* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+* **Analysis summary**: For this sentence, we figured out that we had to split the data into sections by party using the pivot wider function to figure out which owners were mostly democratic and which ones were mostly republican. We had to clean our data set to get rid of all the 0s in the data. We then created a new dataset that listed how much money each owner contributed to each party. We ended up getting 71 republicans and 49 democrats (their numbers were 74 and 48). The answer seems a little off because our dataset contains only 158 owners and not 160 and we weren’t sure if the “bipartisan but mostly (republican/democrat) dataset was counted. 
 
 ```{r}
 # Put code to reverse engineer sentence here
 owner_totals <- sports_politics %>%
-  group_by(owner, party, league) %>%
+  group_by(owner, league, party) %>%
 summarise(total_contribs = sum(amount))%>%
  pivot_wider(names_from=party, values_from=total_contribs)%>%
 clean_names()
+owner_totals [is.na(owner_totals)] <- 0 
+
+owner_totals_added <- owner_totals %>%
+mutate(total= democrat+n_a+bipartisan+republican+bipartisan_but_mostly_democratic+bipartisan_but_mostly_republican+independent, pct_democrat= democrat/total, pct_republican = republican/total)
+
+
+owner_totals_added %>%
+  filter(pct_democrat>=.5)
+
+owner_totals_added %>%
+  filter(pct_republican>=.5)
+
 
 # calculate a grand total and percents for D & R
 # then filter for > .50 by party
@@ -76,45 +88,67 @@ clean_names()
 ### Sentence 2
 
 * **Sentence text**: But while that overall summary is interesting, a more pronounced signal begins to emerge when we look more closely at this group’s larger political donations. There are 40 owners who have donated at least 100,000 to Republican causes over the six-year period, compared to 23 owners topping $100,000 to Democrats, helping lead to these splits
-* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+* **Analysis summary**: For this sentence, we figured out that we had to filter which donations were made of over $100,000 and their corresponding party. We used the dataset we created in question one with the total owner donations by party. We ended up getting 37 republicans and 22 democrats (their numbers were 40 and 23). The answer seems a little off because our dataset contains only 158 owners and not 160 and we weren’t sure if the “bipartisan but mostly (republican/democrat) dataset was counted.
+
 
 ```{r}
-sports_politics <- sports_politics_filtered 
-sports_politics$amount <- (gsub(",", "", sports_politics$amount))
-sports_politics$amount <- gsub("\\$", "", sports_politics$amount)
-sports_politics$amount <- as.numeric(sports_politics$amount)
-```
-```{r}
-sports_politics %>%
+owner_totals %>%
   group_by(owner)%>%
-  filter(party=="Republican", amount>=100000)
-```
-```{r}
+  filter (republican>=100000)
 
+owner_totals %>%
+  group_by(owner)%>%
+  filter (democrat>=100000)
 ```
-
 ### Sentence 3
 
 * **Sentence text**: “Overall, 51.7 percent of all contributions by WNBA owners went to Democrats, with 42.3 percent going to Republicans. And of the $1.3 million contributed by WNBA owners to Republicans, 65.5 percent comes from Kelly Loeffler, the Republican from Georgia who is co-owner of the Atlanta Dream.”
-* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
-
+* **Analysis summary**:  For this sentence we created a new data frame with owners from the WNBA league. From there we calculated the total of all the contributions and a total of just the democratic and just the republican WNBA owner donations respectively. We calculated that 51.7% of the total WNBA donations were democratic and 42.3% were republican (exactly the same as the authors). We also isolated Kelley Loefler’s republican donations and divided it by the total republican donations that we had previously calculated to get 65.5% (same as stated by authors). 
 ```{r}
 # Put code to reverse engineer sentence here
-sports_politics %>% 
-  group_by(league,party)%>% 
-  filter(league=="WNBA")
+owner_totals_wnba <- owner_totals %>%
+  filter(str_detect(league,"WNBA"))
+
+owner_totals_wnba %>%
+  group_by(league)%>%
+summarise(sum(democrat+n_a+bipartisan+republican+bipartisan_but_mostly_democratic+bipartisan_but_mostly_republican+independent))
+ #Total sum = 3,162,455
+
+owner_totals_wnba %>%
+  group_by(league)%>%
+summarise(sum(democrat))
+ #Democrat sum = 1,634,153
+
+owner_totals_wnba %>%
+    group_by(league)%>%
+summarise(sum(republican))
+#Republican sum = 1,338,459
+
+#Kelley Loeffler donated 876,150 which is 65% of the Republican sum (as listed above)
+
+# Democrat sum over total is equal to 51.7% and Republican sum over total sum is equal to 42.3%, both of which exactly match their calculations. 
+
+
 
 # Display results of code below this codeblock
-
 ```
 
 ### Sentence 4
 
 * **Sentence text**: “And when we isolate just the big-ticket donations topping $100,000 from this group, a familiar picture emerges. More than 63 percent of the $47 million in the database of nearly 3,000 contributions comes from just 108 donations split among these 40 owners — and 79 percent of that money went to Republican causes.” 
-* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+* **Analysis summary**: For this sentence we figured out that we had to filter the donations over $100,000 and worked within them to find the percentage of republican donations. We found that the republican donations came out to be a little over $23 million which did get us 79% of the $29 million that were just these isolated $100,000 donations. The $29 million was also 63% of the total $49 million the authors had said it was.
 
 ```{r}
 # Put code to reverse engineer sentence here
+sports_politics%>%
+   filter(amount>=100000)%>%
+summarise(sum(amount))
+#The total of these donations is 29,692,044 and this amount divided by the total $47 million is 63%
+sports_politics%>%
+  filter(amount>=100000) %>%
+  filter (party=="Republican")%>%
+  summarise(sum(amount))
+#The total of the republican donations is 23,429,805 and this amount divided by the total of approximately $29 million (as calculated above) is about 79% 
 
 # Display results of code below this codeblock
 
@@ -123,10 +157,19 @@ sports_politics %>%
 ### Sentence 5
 
 * **Sentence text**: “American professional sports owners have contributed nearly $47 million in federal elections since 2015, according to research by ESPN in partnership with FiveThirtyEight, including $10 million to Republican causes and $1.9 million to Democratic causes so far in the 2020 election cycle.”
-* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+* **Analysis summary**:For this sentence we figured out that we had to isolate the 2020 election year cycle and analyze the money by party. We filtered by the election year for 2020 and then by each party. Then we added the total for that year. For republicans, we got $10 million, and for democratic, we got $1.8 million, both numbers of which were stated by the authors. 
 
 ```{r}
 # Put code to reverse engineer sentence here
+sports_politics%>%
+  filter(election_year=="2020")%>%
+   filter (party=="Republican")%>%
+  summarise (sum(amount))
+
+sports_politics%>%
+  filter(election_year=="2020")%>%
+   filter (party=="Democrat")%>%
+  summarise (sum(amount))
 
 # Display results of code below this codeblock
 
