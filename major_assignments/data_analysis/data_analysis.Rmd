@@ -1,0 +1,46 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(janitor)
+library(tidyverse)
+spotify_yt <- read_csv("data/Spotify_Youtube.csv")%>%
+clean_names()
+```
+
+####
+
+1. Loads and cleans the core data set to prepare for analysis.
+
+We used the cleannames() function to get rid of unnecessary spaces in the column names. 
+
+
+ 2. Shows basic exploratory analysis to demonstrate an understanding of the dataset, including the number of rows and columns, any obvious limitations or flaws and any reasons why it might not be able to answer the questions you've posted last week. 
+
+
+In this dataset there are 20,718 rows (different songs) with 21 columns (mostly different categories to break down the songs, though some are links). There aren’t any obvious flaws that stand out to us at the moment. 
+
+A big limitation is that the data does not tell us the date that songs came out. This is important to know because it could be unfair to compare a song that just came out to one that’s been out for years and the two are not actually equal. This data also doesn’t tell us the peak height that a song reached on the Hot 100 Billboard charts which could be interesting to be aware of. It would be a bit hard to define what “popular” means outside of this metric, but for our case we will try to find a dataset that we think fits it to the best of our ability. 
+
+3. Describe the limits of the data in terms of timeframe, what is and is not included and any codes or other information you'd need to find definitions for, and what you've done to better define it.
+
+The data was collected Feb 7, 2023. So right off the bat any songs that were released after that are not on the list and any songs that gained popularity after that are not reflected properly to the numbers of today.. For the most part all the data is understandable and we wouldn’t need to search for the definitions of it. The only term that I was unfamiliar with was “valence” but after a quick google search I learned that it means musical positiveness conveyed by a track.
+
+####
+
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+
+
