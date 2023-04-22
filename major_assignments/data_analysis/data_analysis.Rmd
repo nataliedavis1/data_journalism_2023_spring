@@ -12,6 +12,20 @@ library(janitor)
 library(tidyverse)
 spotify_yt <- read_csv("data/Spotify_Youtube.csv")%>%
 clean_names()
+
+spotify_yt_minutes <- spotify_yt %>%
+  mutate(minute_run = duration_ms / 60000) %>%
+  mutate(minute_valence_ratio = valence / minute_run) %>%
+  arrange(desc(minute_valence_ratio))
+
+# We tried to compare the valence to the minute run but weren’t sure if the number was an accurate representation because the shortest songs were only appearing at the top and some songs did not have valence. We are not sure if there is a better way to find this comparison **
+```
+```{r}
+spotify_yt_minutes %>%
+  mutate(views_energy = energy / views) %>%
+  arrange(desc(views_energy))
+
+#The problem here is that some songs have only 2 views and some have thousands of views, is there a better way to compare here? **
 ```
 
 ####
