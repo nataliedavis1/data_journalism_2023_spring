@@ -10,10 +10,10 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 ```{r}
 library(janitor)
 library(tidyverse)
-spotify_yt <- read_csv("data/Spotify_Youtube.csv")%>%
+spotify_youtube <- read_csv("data/Spotify_Youtube.csv")%>%
 clean_names()
 
-spotify_yt_minutes <- spotify_yt %>%
+spotify_youtube <- spotify_youtube %>%
   mutate(minute_run = duration_ms / 60000) %>%
   mutate(minute_valence_ratio = valence / minute_run) %>%
   arrange(desc(minute_valence_ratio))
@@ -21,11 +21,50 @@ spotify_yt_minutes <- spotify_yt %>%
 # We tried to compare the valence to the minute run but weren’t sure if the number was an accurate representation because the shortest songs were only appearing at the top and some songs did not have valence. We are not sure if there is a better way to find this comparison **
 ```
 ```{r}
+  correlation <- cor(spotify_youtube$energy, spotify_youtube$views, na.rm=TRUE)
+print(correlation)
+```
+
+```{r}
 spotify_yt_minutes %>%
   mutate(views_energy = energy / views) %>%
   arrange(desc(views_energy))
 
 #The problem here is that some songs have only 2 views and some have thousands of views, is there a better way to compare here? **
+```
+```{r}
+# What key is most frequent within the top 20 most streamed songs? 
+top20<- spotify_youtube %>%
+  arrange (desc(stream)) %>%
+head (25)
+  top20_cleaned <- top20[c (-5, -8, -11, -13, -23), ] 
+  
+ 
+
+
+  
+
+top20_key <- top20_cleaned%>%
+  group_by(key)%>%
+  summarise(total_key = n()) %>%
+  arrange (desc(total_key))
+# Figure out the number correlation to the actual letter key
+
+
+```
+
+```{r}
+top20_loudness <- top20_cleaned%>%
+  group_by(loudness)%>%
+  summarise(total_loudness = n()) %>%
+  arrange (desc(total_loudness))
+
+loudness_rounded <- top20_cleaned %>%
+  mutate( loudness_rounded = round(loudness, 0)) %>%
+    group_by(loudness_rounded)%>%
+  summarise(total_loudness_rounded = n()) %>%
+  arrange (desc(total_loudness_rounded))
+  
 ```
 
 ####

@@ -1,0 +1,103 @@
+---
+title: "lab_11"
+author: "derek willis"
+date: "2023-04-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## You will need
+
+* Our usual libraries for working with data, plus rvest.
+
+## Load libraries and establish settings
+
+**Task** Create a codeblock and load appropriate packages and settings for this lab.
+
+Let's get to scraping.
+
+## Questions
+```{r}
+library(rvest)
+library(tidyverse)
+library(janitor)
+library(lubridate)
+```
+
+**Q1**. Scrape the listing of available Maryland state grants at https://grants.maryland.gov/Pages/StateGrants.aspx into a dataframe. You should have three columns, one of which is a date, so make sure the date column has a date datatype. Then, write code to count the number of grants opportunities offered by each organization listed in your dataframe, showing the organization with the most grant opportunities first. Which state agency has the most?
+
+**A1: The table shows that the Maryland Energy Administration has the most grant opportunities, with 14, however, the data set is not fully condensed. For example, Maryland State Arts Council is counted seperately from MD Arts council and MD State Arts Council, even though these presumably should all be counted the same.  ** 
+
+```{r}
+courts_url <- "https://grants.maryland.gov/Pages/StateGrants.aspx"
+
+results <- courts_url %>%
+  read_html() %>%
+  html_table() 
+ 
+results <- results[[1]]
+
+results <- results %>%
+  mutate(DueDate = mdy(DueDate))
+```
+```{r}
+results %>%
+  group_by(Organization)%>%
+  summarise(total_organization = n()) %>%
+  arrange (desc(total_organization))
+```
+
+**Q2** Next, let's scrape the list of press releases from Maryland's Office of the Public Defender, https://www.opd.state.md.us/press-releases. This isn't a table, so you'll need to use `html_elements()` and your browser's inspector and do some clean up on the results. The result should be a dataframe with two columns that contain the date and title, and the date column should have a date datatype. The challenge here is figuring out how to isolate the releases.
+
+When you finish scraping into a dataframe, write code to find the press releases that have the word "police" in the title. How many are there and when was the most recent one?
+
+**A2: There are 9 press releases with the word police in the title, the most recent one is from June 21st, 2021 which covers the aftermath of a video depicting police using excessive force ** 
+
+```{r}
+opd_url <- "https://www.opd.state.md.us/press-releases"
+
+opd_results <- opd_url %>%
+  read_html()
+
+dataframe_opd <- opd_results %>% html_elements('p.font_8.wixui-rich-text__text') %>% html_text() %>% as_tibble() %>% separate(value, c('date', 'title'), sep=":") %>% na.omit(dataframe_opd) %>% mutate(date = mdy(date))
+
+dataframe_opd %>%
+  filter(str_detect(title, "Police")) %>%
+  arrange (desc(date))
+```
+
+**Q3** Sen. Ben Cardin, D-Maryland, has posted hundreds of press releases at https://www.cardin.senate.gov/?post_type=press-releases. It would be great to have all of them in a dataframe that has the following columns: date, title and url.
+
+To do this, you will need to scrape the page's html and save that to a variable, and _then_ extract the dates, titles and urls into _separate_ dataframes using html_elements(). And remember how we turn a list into a dataframe. The function `html_text()` pulls out the contents of a tag, but for urls we want the HTML attribute. Rvest gives you a way to extract the URL from a link; google to find out what it is.
+
+At the end, you'll have three dataframes that you want to combine into a single dataframe. When we want to combine the rows of identical dataframes, we used `bind_rows()`. If you were combining columns instead of rows, there's a similar function. Find out what it is and use it to put all of the dataframes together into a single one.
+
+When you're done, rename the columns so they make sense, then make sure the date column is an actual date.
+
+Finally, tell me what questions you could ask of this data. Be creative.
+
+**A3: I would probably ask about what month is most frequent for press releases and what issues Cardin seems to be more passionate about public support for (for example a lot of his press releases contain the word bipartisan so it could be interesting to look more into this) I would look at these links and read more about it. ** 
+
+```{r}
+cardin_url <- "https://www.cardin.senate.gov/?post_type=press-releases"
+
+cardin_results <- cardin_url %>%
+  read_html()
+
+dates_html <- cardin_results %>% html_elements('h5.customBlog_item__date') %>% html_text() %>% as_tibble()%>% mutate(value = mdy(value))
+
+colnames(dates_html) <- c("date")
+
+titles_html <- cardin_results %>% html_elements('h3.customBlog_item__title') %>% html_text() %>% as_tibble() %>% mutate(value = str_squish(value))
+
+colnames(titles_html) <- c("title")
+
+href_html <- cardin_results %>% html_elements("h3 a") %>% html_attr("href") %>% as_tibble()
+
+colnames(href_html) <- c("href")
+ 
+full_dataframe <- cbind (dates_html, titles_html, href_html)
+```
