@@ -36,6 +36,7 @@ library(rvest)
 library(tidyverse)
 library(janitor)
 library(lubridate)
+
 ```
 
 For this example, we're going to work on loading a simple table of data from the Maryland State Board of Elections. This is a table of unofficial county-level election results for the Attorney General's race from the November general election.
