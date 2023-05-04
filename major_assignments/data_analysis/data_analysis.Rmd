@@ -14,46 +14,61 @@ spotify_youtube <- read_csv("data/Spotify_Youtube.csv")%>%
 clean_names()
 
 spotify_youtube <- spotify_youtube %>%
-  mutate(minute_run = duration_ms / 60000) %>%
-  mutate(minute_valence_ratio = valence / minute_run) %>%
-  arrange(desc(minute_valence_ratio))
-
-# We tried to compare the valence to the minute run but weren’t sure if the number was an accurate representation because the shortest songs were only appearing at the top and some songs did not have valence. We are not sure if there is a better way to find this comparison **
-```
-```{r}
-  correlation <- cor(spotify_youtube$energy, spotify_youtube$views, na.rm=TRUE)
-print(correlation)
+  mutate(minute_run = duration_ms / 60000) 
 ```
 
+
 ```{r}
-spotify_yt_minutes %>%
+
+# Question 1. How does the amoint of energy within the music compare to the number of views the song has 
+
+spotify_youtube %>%
   mutate(views_energy = energy / views) %>%
   arrange(desc(views_energy))
 
 #The problem here is that some songs have only 2 views and some have thousands of views, is there a better way to compare here? **
+
+ correlation <- cor(spotify_youtube$energy, spotify_youtube$views, na.rm=TRUE)
+mutate(correlation = cor (energy, views))
+print(correlation)
 ```
+
+
+
 ```{r}
-# What key is most frequent within the top 20 most streamed songs? 
+#Question 2: Is there a connection between the length of the song and the valence (mood) of the song?
+spotify_youtube <- spotify_youtube %>%
+  mutate(minute_run = duration_ms / 60000) %>%
+  mutate(minute_val_ratio = valence/minute_run) %>%
+  arrange(desc(minute_val_ratio))
+
+#Note: We tried to compare the valence to the minute run but weren’t sure if the number was an accurate representation because the shortest songs were only appearing at the top and some songs did not have valence. We are not sure if there is a better way to find this comparison.  
+
+
+```
+
+
+
+
+
+```{r}
+# Question 3. What key is most frequent within the top 20 most streamed songs? 
 top20<- spotify_youtube %>%
   arrange (desc(stream)) %>%
 head (25)
   top20_cleaned <- top20[c (-5, -8, -11, -13, -23), ] 
   
- 
-
-
-  
-
 top20_key <- top20_cleaned%>%
   group_by(key)%>%
   summarise(total_key = n()) %>%
   arrange (desc(total_key))
-# Figure out the number correlation to the actual letter key
 
-
+# The most common keys are C# (1), G (7) and D (2). These keys occur 5, 3 and 2 times respectively. Since the C# key occurs five times, our major finding is that the C# key is occuring about 25% of the time within the top 20 most streamed songs. 
 ```
 
 ```{r}
+# Question 4. What level of loudness is the most frequent among the top 20 streamed songs? 
+
 top20_loudness <- top20_cleaned%>%
   group_by(loudness)%>%
   summarise(total_loudness = n()) %>%
@@ -64,7 +79,21 @@ loudness_rounded <- top20_cleaned %>%
     group_by(loudness_rounded)%>%
   summarise(total_loudness_rounded = n()) %>%
   arrange (desc(total_loudness_rounded))
-  
+
+# The most common levels of loudness among the top 20 streamed songs are -6, -7 and -5, which occurred 8, 4 and 2 times within the data set respectively. Since 8 out of the 20 most streamed songs have a loudness of -6, this occurs about 40% of the time. We could not figure out how loud that actually is because when we researched decibels the meausuring unit was a completely different scale then our data set had it as. 
+```
+
+
+
+```{r}
+# Question 5: Of the top 20 most streamed songs, which song has the highest like to view ratio?
+
+top20_liketoview <- top20_cleaned %>%
+  mutate(like_views = likes / views * 100) %>%
+  arrange(desc(like_views))
+
+# The songs that have the highest like to view ratio are Heat Waves by Glass Animals and Stay by The Kid Laroi (feat. Justin Bieber), these songs both have approximately a 1.49 % like to view ratio. This means that about 1.49% of all the people who viewed their respective music videos on Youtube gave it a like. 
+
 ```
 
 ####
