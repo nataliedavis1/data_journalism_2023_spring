@@ -10,6 +10,8 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 ```{r}
 library(janitor)
 library(tidyverse)
+library(corrr)
+
 spotify_youtube <- read_csv("data/Spotify_Youtube.csv")%>%
 clean_names()
 
@@ -33,51 +35,78 @@ correlation <- cor(correlation_df$energy, correlation_df$views)
 print(correlation)
 
 
-# The correlation number here shows that there is not a signicant correlation between the two categories.
+# For this question our finding was that the correlation number here shows there is not a significant correlation between the two categories. This is an interesting finding to us because we had initially thought that the higher energy a video had the more excited we would personally be to view it. In our experiences as music listeners, we often associate our listening habits as repeatedly going back to songs that have higher energy and wanting to listen to those songs again and again. From our experience as listeners, lower energy songs do not have the same level of replay-ability. This could make for an interesting story if we looked deeper into why this data set doesn’t point to an existing correlation. The next step that we took was looking further into what energy could be correlated to, which we will answer in question 2.
+```
+```{r}
+cor.test(correlation_df$energy, correlation_df$views)
 
+spotify_youtube %>%
+  ggplot() +
+  geom_point(aes(x=energy,y=views)) +
+  geom_smooth(aes(x=energy,y=views), method="lm")
 ```
 
 
 
 ```{r}
-#Question 2: Is there a connection between the length of the song and the valence (mood) of the song?
+#Question 2: Is there a connection between the energy and the valence (mood) of the song?
 spotify_youtube <- spotify_youtube %>%
   mutate(minute_run = duration_ms / 60000) %>%
   mutate(minute_val_ratio = valence/minute_run)
   
 correlation_df_minuteval <- spotify_youtube %>%
   filter(!is.na(valence)) %>%
-  filter(!is.na(minute_run)) %>%
-   mutate(correlation = cor (valence, minute_run))
+  filter(!is.na(energy)) %>%
+   mutate(correlation = cor (valence, energy))
 
 
-correlation <- cor(correlation_df_minuteval$valence, correlation_df_minuteval$minute_run)
+correlation <- cor(correlation_df_minuteval$valence, correlation_df_minuteval$energy)
 
 print(correlation)
+  
+#For this question our finding was that there ended up being a stronger correlation between energy and valence. The r number of 0.39 here was much stronger than the correlation between energy and views. This positive correlation suggests that when songs have a more positive valence than usually the energy of that song is going to be more upbeat as opposed to a song with a negative valence which will usually have a lower energy level. This is an interesting finding because people who are turning on a playlist may want to know more about how the valence that they are listening to impacts the overall energy of the song. If we were to make a story using this finding, we would want to look at music genres that contradict this pattern in the data. For example, we were thinking about the metal music genre. Usually that genre has negative valence when it comes to its lyrics, however the music itself is very high energy. There are potentially other genres that fit that same category and looking deeper into why people might enjoy this kind of juxtaposition could give some insight into the music industry and how genre’s differ from one another.
 
 
- # The correlation number here shows that there is not a signicant correlation between the two categories.
+```
+```{r}
+spotify_youtube %>%
+  ggplot() +
+  geom_point(aes(x=energy,y=valence)) +
+  geom_smooth(aes(x=energy,y=valence), method="lm")
+```
 
+
+
+```{r}
+# Question 3. What key is most frequent within the top 20 most streamed songs? What about within all of the songs?
 ```
 
 
 ```{r}
-# Question 3. What key is most frequent within the top 20 most streamed songs? 
 top20<- spotify_youtube %>%
-  arrange (desc(stream)) %>%
+  arrange(desc(stream))
 head (25)
-  top20_cleaned <- top20[c (-5, -8, -11, -13, -23), ] 
-  
-top20_key <- top20_cleaned%>%
+  top20_cleaned <- top20[c (-5, -8, -11, -13, -23), ]
+```
+
+
+```{r}
+spotify_youtube %>%
   group_by(key)%>%
   summarise(total_key = n()) %>%
-  arrange (desc(total_key))
-
-# The most common keys are C# (1), G (7) and D (2). These keys occur 5, 3 and 2 times respectively. Since the C# key occurs five times, our major finding is that the C# key is occuring about 25% of the time within the top 20 most streamed songs. 
+  mutate(pct= total_key / 20718 *100 ) %>%
+  arrange (desc(total_key)) 
+  
+# The most common keys are C# (1), G (7) and D (2). These keys occur 5, 3 and 2 times respectively. Since the C# key occurs five times, our major finding is that the C# key is occurring about 25% of the time within the top 20 most streamed songs. Of all the songs, the most common is C which occurs 11% of the time. It is interesting to note though that  the C# key is nearly twice as common within the top 20 most streamed songs as it is within all (10% as compared to 25%).This could be because writers have noticed that songs in this key do well, or sound good so they strive to write hit songs in that key. For this story it would be interesting to look more into what exactly makes up a hit song as key could definitely play a factor in a song being more popular. Within our story we would want to pitch that we should interview songwriters with the hopes of creating a hit and ask them what goes into their decision making process and whether or not they heavily consider a song’s key before creating their song.
+  
 ```
 
 ```{r}
 # Question 4. What level of loudness is the most frequent among the top 20 streamed songs? 
+top_20 <- spotify_youtube %>%
+    arrange(desc(stream))%>%
+    head(25)
+    top20_cleaned <- top_20[c (-5, -8, -11, -13, -23), ]
 
 top20_loudness <- top20_cleaned%>%
   group_by(loudness)%>%
@@ -90,23 +119,28 @@ loudness_rounded <- top20_cleaned %>%
   summarise(total_loudness_rounded = n()) %>%
   arrange (desc(total_loudness_rounded))
 
-# The most common levels of loudness among the top 20 streamed songs are -6, -7 and -5, which occurred 8, 4 and 2 times within the data set respectively. Since 8 out of the 20 most streamed songs have a loudness of -6, this occurs about 40% of the time. We could not figure out how loud that actually is because when we researched decibels the meausuring unit was a completely different scale then our data set had it as. 
+top20_cleaned %>%
+  mutate( loudness_rounded = round(loudness, 0)) %>%
+    group_by(loudness_rounded)%>%
+  summarise(total_loudness_rounded = n()) %>%
+  mutate(pct= total_loudness_rounded/ 20 *100 ) %>%
+  arrange (desc(total_loudness_rounded))
+
+
+# The most common level of loudness among the top 20 streamed songs is -6, -7 and -5.These key's occur 8, 4 and 2 times respectively. Since 8 out of the 20 most streamed songs have a loudness of -6, this occurs about 40% of the time. We could not figure out how loud that actually is because when we researched decibels, the measuring unit, it was a completely different scale than our data set had it as. However, this is an interesting finding because nearly half of the top 20 streamed songs in the data have the same loudness level. It would be interesting to look into why this is, if it has anything to do with the hit song production process, or if people who are streaming songs are more inclined to listen to songs within this level of loudness. 
 ```
-
-
 
 ```{r}
 # Question 5: Of the top 20 most streamed songs, which song has the highest like to view ratio?
 
-top20_liketoview <- top20_cleaned %>%
+spotify_youtube %>%
   mutate(like_views = likes / views * 100) %>%
   arrange(desc(like_views))
 
-# The songs that have the highest like to view ratio are Heat Waves by Glass Animals and Stay by The Kid Laroi (feat. Justin Bieber), these songs both have approximately a 1.49 % like to view ratio. This means that about 1.49% of all the people who viewed their respective music videos on Youtube gave it a like. 
+#The top 4 songs that have the highest like to view ratio are all by the same artist called j-hope. These songs all have a 20% plus like to view ratio, meaning that 20% of the people who watched the video have given it a like. Although they have high like to view ratios, these are not this artist highest ranked according to the Billboard charts which is interesting because it could mean that this artist's fans could potentially be the ones who are giving these songs a like. J-hope is a part of a South Korean boy band called BTS which is known for having fans that were particularly dedicated to the members of the group. The band had a heavy fangirl culture both within South Korea and internationally. It would be interesting to focus a story around talking to fangirls and seeing their thoughts on why some songs resonate within just the fandom as opposed to other songs that resonate more broadly. 
 
 ```
-
-####
+##
 
 1. Loads and cleans the core data set to prepare for analysis.
 
